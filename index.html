@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create custom memes easily with MK Meme Generator. Responsive, free, and open source.">
+    <meta name="keywords" content="meme generator, free meme maker, responsive meme, dark mode, SEO">
+    <meta name="author" content="MK Meme Generator">
+    <title>MK Meme Generator</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1c1c1e;
+            color: #fff;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* Header */
+        header {
+            background-color: #121212;
+            padding: 10px 0;
+            width: 100%; /* Full width */
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: Arial, sans-serif;
+            font-size: 0.9rem; /* Smaller font */
+            color: gray; /* Gray color like footer */
+            letter-spacing: 0.1em;
+        }
+
+        /* Meme Library */
+        #meme-library {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .meme-thumbnail {
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            cursor: pointer;
+            border: 2px solid #444;
+            border-radius: 5px;
+        }
+
+        /* Meme Builder */
+        #meme-builder {
+            text-align: center;
+            background-color: #2c2c2e;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #meme-image-container {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #444;
+        }
+
+        #meme-image {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #444;
+        }
+
+        .meme-text {
+            font-family: Impact, sans-serif;
+            color: white;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 #000;
+            cursor: move;
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            transform: translate(-50%, -50%);
+            user-select: none; /* Prevent text selection while dragging */
+        }
+
+        .bottom-text {
+            top: 90%;
+        }
+
+        /* Text Controls */
+        #text-controls {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #text-size {
+            display: flex;
+            align-items: center;
+        }
+
+        #text-size input[type="range"] {
+            margin-left: 10px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            padding: 20px 0;
+            text-align: center;
+            color: gray;
+        }
+
+        footer a {
+            color: red;
+            text-decoration: underline;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 0.8rem; /* Even smaller font on mobile */
+            }
+
+            .meme-thumbnail {
+                width: 70px;
+                height: 70px;
+            }
+
+            #meme-builder {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>mk meme generator - open source</h1>
+    </header>
+
+    <!-- Meme Library -->
+    <section id="meme-library">
+        <div class="meme-thumbnail" style="background-image: url('template1.jpg');" onclick="selectMeme('template1.jpg')"></div>
+        <div class="meme-thumbnail" style="background-image: url('template2.jpg');" onclick="selectMeme('template2.jpg')"></div>
+        <div class="meme-thumbnail" style="background-image: url('template3.jpg');" onclick="selectMeme('template3.jpg')"></div>
+        <!-- More meme templates... -->
+        <button onclick="showAll()">All</button>
+    </section>
+
+    <!-- Meme Builder -->
+    <section id="meme-builder">
+        <div id="meme-image-container">
+            <img id="meme-image" src="template1.jpg" alt="Meme template">
+            <div class="meme-text top-text" id="top-text" contenteditable="true" oninput="updateText('top')">TOP TEXT</div>
+            <div class="meme-text bottom-text" id="bottom-text" contenteditable="true" oninput="updateText('bottom')">BOTTOM TEXT</div>
+        </div>
+        <div id="text-controls">
+            <div id="text-size">
+                <label for="textSize">Text Size:</label>
+                <input type="range" id="textSize" min="3" max="40" value="20" oninput="updateTextSize()">
+            </div>
+        </div>
+        <button onclick="downloadMeme()">Download Meme</button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        This meme generator is free to use. For copyright or complaints, click <a href="mailto:youremail@example.com">here</a>.
+    </footer>
+
+    <script>
+        let draggedElement = null;
+        let offsetX, offsetY;
+
+        // Function to select a meme template
+        function selectMeme(template) {
+            document.getElementById('meme-image').src = template;
+        }
+
+        // Function to update text size
+        function updateTextSize() {
+            const size = document.getElementById('textSize').value + 'px';
+            document.getElementById('top-text').style.fontSize = size;
+            document.getElementById('bottom-text').style.fontSize = size;
+        }
+
+        // Drag-and-drop and touch-move functions for text
+        function startDrag(event) {
+            draggedElement = event.target;
+            offsetX = event.offsetX;
+            offsetY = event.offsetY;
+        }
+
+        function drag(event) {
+            if (!draggedElement) return;
+            const rect = draggedElement.parentElement.getBoundingClientRect();
+            draggedElement.style.left = `${event.clientX - rect.left - offsetX}px`;
+            draggedElement.style.top = `${event.clientY - rect.top - offsetY}px`;
+        }
+
+        function startTouch(event) {
+            draggedElement = event.target;
+            const touch = event.touches[0];
+            offsetX = touch.clientX - draggedElement.getBoundingClientRect().left;
+            offsetY = touch.clientY - draggedElement.getBoundingClientRect().top;
+        }
+
+        function touchMove(event) {
+            if (!draggedElement) return;
+            const touch = event.touches[0];
+            const rect = draggedElement.parentElement.getBoundingClientRect();
+            draggedElement.style.left = `${touch.clientX - rect.left - offsetX}px`;
+            draggedElement.style.top = `${touch.clientY - rect.top - offsetY}px`;
+        }
+
+        // Add event listeners for drag and touch
+        document.querySelectorAll('.meme-text').forEach(element => {
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('mousemove', drag);
+            element.addEventListener('touchstart', startTouch);
+            element.addEventListener('touchmove', touchMove);
+        });
+
+        document.addEventListener('mouseup', () => draggedElement = null);
+        document.addEventListener('touchend', () => draggedElement = null);
+
+        // Function to download meme
+        function downloadMeme() {
+            const meme = document.getElementById('meme-image-container');
+            html2canvas(meme).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'meme.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        // Show all meme templates (mockup)
+        function showAll() {
+            alert('Displaying all meme templates.');
+        }
+    </script>
+
+    <!-- Load external JS for HTML to canvas functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
